@@ -11,6 +11,8 @@
 
 namespace workerd::api::public_beta {
 
+class R2MultipartUpload;
+
 class R2Bucket: public jsg::Object {
   // A capability to an R2 Bucket.
 
@@ -96,6 +98,20 @@ public:
     jsg::Optional<kj::OneOf<kj::Array<kj::byte>, jsg::NonCoercible<kj::String>>> sha512;
 
     JSG_STRUCT(onlyIf, httpMetadata, customMetadata, md5, sha1, sha256, sha384, sha512);
+  };
+
+  struct MultipartOptions {
+    jsg::Optional<kj::OneOf<HttpMetadata, jsg::Ref<Headers>>> httpMetadata;
+    jsg::Optional<jsg::Dict<kj::String>> customMetadata;
+
+    JSG_STRUCT(httpMetadata, customMetadata);
+  };
+
+  struct UploadedPart {
+    int partNumber;
+    kj::String etag;
+
+    JSG_STRUCT(partNumber, etag);
   };
 
   class HeadResult: public jsg::Object {
@@ -230,6 +246,16 @@ public:
   jsg::Promise<kj::Maybe<jsg::Ref<HeadResult>>> put(jsg::Lock& js,
       kj::String key, kj::Maybe<R2PutValue> value, jsg::Optional<PutOptions> options,
       const jsg::TypeHandler<jsg::Ref<R2Error>>& errorType);
+  jsg::Promise<jsg::Ref<R2MultipartUpload>> createMultipartUpload(jsg::Lock& js,
+      kj::String key, jsg::Optional<MultipartOptions> options,
+      const jsg::TypeHandler<jsg::Ref<R2Error>>& errorType);
+  jsg::Promise<UploadedPart> uploadPart(jsg::Lock& js,
+      kj::String key, kj::String uploadId, int partNumber, R2PutValue value,
+      const jsg::TypeHandler<jsg::Ref<R2Error>>& errorType);
+  jsg::Promise<void> abortMultipartUpload(jsg::Lock& js,
+      kj::String key, kj::String uploadId, const jsg::TypeHandler<jsg::Ref<R2Error>>& errorType);
+  jsg::Promise<jsg::Ref<R2Bucket::HeadResult>> completeMultipartUpload(jsg::Lock& js,
+      kj::String key, kj::String uploadId, kj::Array<UploadedPart> uploadedParts, const jsg::TypeHandler<jsg::Ref<R2Error>>& errorType);
   jsg::Promise<void> delete_(jsg::Lock& js, kj::OneOf<kj::String, kj::Array<kj::String>> keys,
       const jsg::TypeHandler<jsg::Ref<R2Error>>& errorType);
   jsg::Promise<ListResult> list(jsg::Lock& js, jsg::Optional<ListOptions> options,
@@ -239,6 +265,7 @@ public:
     JSG_METHOD(head);
     JSG_METHOD(get);
     JSG_METHOD(put);
+    JSG_METHOD(createMultipartUpload);
     JSG_METHOD_NAMED(delete, delete_);
     JSG_METHOD(list);
   }
@@ -267,19 +294,6 @@ private:
   friend class R2Admin;
 };
 
-#define EW_R2_PUBLIC_BETA_ISOLATE_TYPES \
-  api::R2Error, \
-  api::public_beta::R2Bucket, \
-  api::public_beta::R2Bucket::HeadResult, \
-  api::public_beta::R2Bucket::GetResult, \
-  api::public_beta::R2Bucket::Range, \
-  api::public_beta::R2Bucket::Conditional, \
-  api::public_beta::R2Bucket::GetOptions, \
-  api::public_beta::R2Bucket::PutOptions, \
-  api::public_beta::R2Bucket::Checksums, \
-  api::public_beta::R2Bucket::HttpMetadata, \
-  api::public_beta::R2Bucket::ListOptions, \
-  api::public_beta::R2Bucket::ListResult
-// The list of r2-bucket.h types that are added to worker.c++'s JSG_DECLARE_ISOLATE_TYPE
 
 }  // namespace workerd::api::public_beta
+
