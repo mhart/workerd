@@ -136,6 +136,7 @@ ThreadContext::HeaderIdBundle::HeaderIdBundle(kj::HttpHeaderTable::Builder& buil
       cfCacheStatus(builder.add("CF-Cache-Status")),
       cacheControl(builder.add("Cache-Control")),
       cfKvMetadata(builder.add("CF-KV-Metadata")),
+      cfCacheMetadata(builder.add("CF-Cache-Metadata")),
       cfR2ErrorHeader(builder.add("CF-R2-Error")),
       cfBlobMetadataSize(builder.add("CF-R2-Metadata-Size")),
       cfBlobRequest(builder.add("CF-R2-Request")),

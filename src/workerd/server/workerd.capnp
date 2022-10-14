@@ -424,7 +424,10 @@ struct Worker {
   # Where should the global "fetch" go to? The default is the service called "internet", which
   # should usually be configured to talk to the public internet.
 
-  durableObjectNamespaces @7 :List(DurableObjectNamespace);
+  cacheApiOutbound @7 :ServiceDesignator = "cache";
+  # Where should cache API (i.e. caches.default and caches.open(...)) requests go?
+
+  durableObjectNamespaces @8 :List(DurableObjectNamespace);
   # List of durable object namespaces in this Worker.
 
   struct DurableObjectNamespace {
@@ -466,7 +469,7 @@ struct Worker {
     }
   }
 
-  durableObjectUniqueKeyModifier @8 :Text;
+  durableObjectUniqueKeyModifier @9 :Text;
   # Additional text which is hashed together with `DurableObjectNamespace.uniqueKey`. When using
   # worker inheritance, each derived worker must specify a unique modifier to ensure that its
   # Durable Object instances have unique IDs from all other workers inheriting the same parent.
@@ -476,12 +479,12 @@ struct Worker {
   durableObjectStorage :union {
     # Specifies where this worker's Durable Objects are stored.
 
-    none @9 :Void;
+    none @10 :Void;
     # Default. The worker has no Durable Objects. `durableObjectNamespaces` must be empty, or
     # define all namespaces as `ephemeralLocal`, or this must be an abstract worker (meant to be
     # inherited by other workers, who will specify `durableObjectStorage`).
 
-    inMemory @10 :Void;
+    inMemory @11 :Void;
     # The `state.storage` API stores in-memory only. All stored data will persist for the
     # lifetime of the process, but will be lost upon process exit.
     #

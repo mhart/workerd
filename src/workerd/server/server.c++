@@ -1763,11 +1763,18 @@ kj::Own<Server::Service> Server::makeWorker(kj::StringPtr name, config::Worker::
     Service& globalService = lookupService(conf.getGlobalOutbound(),
         kj::str("Worker \"", name, "\"'s globalOutbound"));
 
+    Service &cacheApi = lookupService(conf.getCacheApiOutbound(),
+        kj::str("Worker \"", name, "\"'s cacheApiOutbound"));
+
+
     // Bind both "next" and "null" to the global outbound. (The difference between these is a
     // legacy artifact that no one should be depending on.)
-    static_assert(IoContext::SPECIAL_SUBREQUEST_CHANNEL_COUNT == 2);
+    static_assert(IoContext::SPECIAL_SUBREQUEST_CHANNEL_COUNT == 3);
     services.add(&globalService);
     services.add(&globalService);
+
+    services.add(&cacheApi);
+
 
     for (auto& channel: subrequestChannels) {
       services.add(&lookupService(channel.designator, kj::mv(channel.errorContext)));
@@ -2155,6 +2162,21 @@ kj::Promise<void> Server::run(jsg::V8System& v8System, config::Config::Reader co
 
     return decltype(services)::Entry {
       kj::str("internet"_kj),
+      kj::mv(service)
+    };
+  });
+
+   // Make the default "cache" service if it's not there already, as a null service
+  services.findOrCreate("cache"_kj, [&]() {
+    auto publicNetwork = network.restrictPeers({}, {});
+
+
+    auto service = kj::heap<NetworkService>(
+        globalContext->headerTable, timer, entropySource,
+        kj::mv(publicNetwork), nullptr);
+
+    return decltype(services)::Entry {
+      kj::str("cache"_kj),
       kj::mv(service)
     };
   });

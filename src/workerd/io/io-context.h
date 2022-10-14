@@ -56,6 +56,7 @@ public:
     const kj::HttpHeaderId cfCacheStatus;         // used by cache API implementation
     const kj::HttpHeaderId cacheControl;
     const kj::HttpHeaderId cfKvMetadata;          // used by KV binding implementation
+    const kj::HttpHeaderId cfCacheMetadata;       // used by Cache binding implementation
     const kj::HttpHeaderId cfR2ErrorHeader;       // used by R2 binding implementation
     const kj::HttpHeaderId cfBlobMetadataSize;    // used by R2 binding implementation
     const kj::HttpHeaderId cfBlobRequest;         // used by R2 binding implementation
@@ -717,6 +718,7 @@ public:
 
   static constexpr uint NULL_CLIENT_CHANNEL = 0;
   static constexpr uint NEXT_CLIENT_CHANNEL = 1;
+  static constexpr uint CACHE_CHANNEL = 2;
   // Subrequest channel numbers for the two special channels.
   // NULL = The channel used by global fetch() when the Request has no fetcher attached.
   // NEXT = DEPRECATED: The fetcher attached to Requests delivered by a FetchEvent, so that we can
@@ -724,7 +726,7 @@ public:
   //     and treat that case differently. In practice this has proven too confusing, so we don't
   //     plan to treat NEXT and NULL differently going forward.
 
-  static constexpr uint SPECIAL_SUBREQUEST_CHANNEL_COUNT = 2;
+  static constexpr uint SPECIAL_SUBREQUEST_CHANNEL_COUNT = 3;
   // Number of subrequest channels that have special meaning (and so won't appear in any binding).
 
   struct SubrequestOptions final {

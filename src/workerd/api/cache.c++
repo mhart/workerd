@@ -91,6 +91,9 @@ jsg::Promise<jsg::Optional<jsg::Ref<Response>>> Cache::match(
     auto requestHeaders = kj::HttpHeaders(context.getHeaderTable());
     jsRequest->shallowCopyHeadersTo(requestHeaders);
     requestHeaders.set(context.getHeaderIds().cacheControl, "only-if-cached");
+    KJ_IF_MAYBE(cn, cacheName) {
+      requestHeaders.set(context.getHeaderIds().cfCacheMetadata, *cn);
+    }
     auto nativeRequest = httpClient->request(
         kj::HttpMethod::GET, validateUrl(jsRequest->getUrl()), requestHeaders, uint64_t(0));
 
@@ -320,6 +323,9 @@ jsg::Promise<void> Cache::put(
                                       "cache_put"_kj);
       auto requestHeaders = kj::HttpHeaders(context.getHeaderTable());
       jsRequest->shallowCopyHeadersTo(requestHeaders);
+      KJ_IF_MAYBE(cn, cacheName) {
+        requestHeaders.set(context.getHeaderIds().cfCacheMetadata, *cn);
+      }
       auto nativeRequest = httpClient->request(
           kj::HttpMethod::PUT, validateUrl(jsRequest->getUrl()),
           requestHeaders, payloadStream->tryGetLength());
@@ -478,6 +484,9 @@ jsg::Promise<bool> Cache::delete_(
     //   origin's cache is not a security flaw (that's what this very API is implementing after
     //   all) so it all lines up nicely.
     requestHeaders.add("X-Real-IP"_kj, "127.0.0.1"_kj);
+    KJ_IF_MAYBE(cn, cacheName) {
+      requestHeaders.set(context.getHeaderIds().cfCacheMetadata, *cn);
+    }
     auto nativeRequest = httpClient->request(
         kj::HttpMethod::PURGE, validateUrl(jsRequest->getUrl()), requestHeaders, uint64_t(0));
 
@@ -504,13 +513,8 @@ kj::Own<kj::HttpClient> Cache::getHttpClient(IoContext& context,
                                              kj::StringPtr operationName) {
   auto span = context.makeTraceSpan(operationName);
 
-  auto cacheClient = context.getCacheClient();
-  auto httpClient = cacheName.map([&](kj::String& n) {
-    return cacheClient->getNamespace(n, kj::mv(cfBlobJson), span);
-  }).orDefault([&]() {
-    return cacheClient->getDefault(kj::mv(cfBlobJson), span);
-  });
-  httpClient = httpClient.attach(kj::mv(span), kj::mv(cacheClient));
+  auto httpClient = context.getHttpClient(IoContext::CACHE_CHANNEL, true, kj::mv(cfBlobJson), operationName);
+  httpClient = httpClient.attach(kj::mv(span));
   return httpClient;
 }
 
