@@ -1,0 +1,21 @@
+src/workerd/api/streams/standard-test.c++
+  s_ea97043066efec::t_8ad7b8231f7490 18-76
+src/workerd/api/streams/standard.c++
+  s_ea97043066efec::t_8e24febafea1f7 3361-3395,3403,3408,3416,3423,3425,3432,3435-3436,3438,3440-3442,3592-3593
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "752d9e6d4ef97b7a8b1b90999554ef1991aa1710",
+  "prompts": {},
+  "sessions": {
+    "s_ea97043066efec": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0720092f6ffeGnnqcNNns4pL6t",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Michael Hart <mhart@cloudflare.com>"
+    }
+  }
+}
